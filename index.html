@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tempahan Bilik Khas SESMA</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <!-- Header Utama -->
+    <header class="bg-blue-900 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">Sistem Tempahan Bilik Khas SESMA</h1>
+                <p class="text-blue-200 text-sm">SM Sains Sultan Mahmud, Kuala Terengganu</p>
+            </div>
+            <div class="mt-3 md:mt-0 flex flex-wrap gap-2">
+                <button onclick="switchTab('client')" id="btnClient" class="bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition">Tempahan Khas</button>
+                <button onclick="switchTab('viewOnly')" id="btnViewOnly" class="bg-blue-800 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition">Semak Jadual (View Only)</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- BAHAGIAN 1: PORTAL PELANGGAN -->
+        <div id="clientSection" class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold mb-4 text-blue-900">1. Pilih Bilik Khas & Tarikh Tempahan</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Bilik Khas:</label>
+                        <select id="roomSelect" onchange="loadBookings()" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                            <option value="Perpustakaan">Perpustakaan</option>
+                            <option value="Bilik Seminar 1">Bilik Seminar 1</option>
+                            <option value="Bilik Seminar 2">Bilik Seminar 2</option>
+                            <option value="Makmal Bestari">Makmal Bestari</option>
+                            <option value="Bilik SAL">Bilik SAL</option>
+                            <option value="My Digital Hub">My Digital Hub</option>
+                            <option value="Bilik Dokumentasi">Bilik Dokumentasi</option>
+                            <option value="Bilik Matematik">Bilik Matematik</option>
+                            <option value="SESMA Space">SESMA Space</option>
+                            <option value="Dewan Utama">Dewan Utama</option>
+                            <option value="Dewan Kenangan">Dewan Kenangan</option>
+                            <option value="Green Screen Studio">Green Screen Studio</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center bg-blue-50 border border-blue-100 p-4 rounded-xl">
+                        <div class="text-sm text-blue-800">
+                            <span class="font-bold block mb-1">Nota Kalendar (GMT+8 Malaysia):</span>
+                            Tarikh berwarna <span class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">Merah</span> penuh. Slot masa yang telah ditempah akan automatik <span class="bg-slate-400 text-white px-2 py-0.5 rounded text-xs">Kelabu / Unavailable</span>.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paparan Kalendar Interaktif -->
+                <div class="mt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <button onclick="changeMonth(-1)" class="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium">&larr; Bulan Sebelum</button>
+                        <h3 id="calendarMonthYear" class="text-lg font-bold text-slate-800"></h3>
+                        <button onclick="changeMonth(1)" class="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium">Bulan Seterusnya &rarr;</button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-center font-semibold text-xs text-slate-500 mb-2">
+                        <div>Ahd</div><div>Isn</div><div>Sel</div><div>Rab</div><div>Kha</div><div>Jum</div><div>Sab</div>
+                    </div>
+                    <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+                </div>
+            </div>
+
+            <!-- Borang Butiran Tempahan -->
+            <div id="bookingFormContainer" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
+                <h2 class="text-xl font-semibold mb-4 text-blue-900">2. Lengkapkan Maklumat Pemohon</h2>
+                <p class="text-sm text-slate-600 mb-4">Tarikh Dipilih: <span id="selectedDateDisplay" class="font-bold text-blue-600"></span></p>
+                
+                <form id="bookingForm" onsubmit="submitBooking(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Pilihan Slot Masa (Setiap 30 Minit):</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 border rounded-xl bg-slate-50" id="timeSlotsContainer"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Pemohon / Guru:</label>
+                            <input type="text" id="nama" required class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">No. Telefon (WhatsApp):</label>
+                            <input type="text" id="telefon" required class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tujuan / Catatan Program:</label>
+                        <textarea id="tujuan" rows="2" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Cth: Mesyuarat Panitia / Bengkel Pelajar"></textarea>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-md">Hantar Tempahan Sekarang</button>
+                </form>
+            </div>
+
+            <div id="successCard" class="bg-emerald-50 border border-emerald-200 p-6 rounded-2xl hidden text-center space-y-3">
+                <div class="text-emerald-600 text-4xl">&#10004;</div>
+                <h3 class="text-xl font-bold text-emerald-900">Tempahan Anda Telah Berjaya Dihantar!</h3>
+                <div id="successDetails" class="text-sm text-emerald-800 bg-white p-4 rounded-xl border border-emerald-100 max-w-md mx-auto text-left space-y-1 shadow-sm"></div>
+                <button onclick="resetSystem()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-medium">Buat Tempahan Baharu</button>
+            </div>
+        </div>
+
+        <!-- BAHAGIAN 2: SEMAK JADUAL (VIEW ONLY) -->
+        <div id="viewOnlySection" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-blue-900">Semak Jadual Bilik Khas (View Only)</h2>
+                        <p class="text-sm text-slate-500">Semak senarai bilik, masa, serta nama pemohon yang telah ditempah.</p>
+                    </div>
+                    <button onclick="loadViewOnlyData()" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-sm font-medium">Muat Semula Jadual</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 border-b text-slate-700">
+                                <th class="p-3">Tarikh</th>
+                                <th class="p-3">Masa</th>
+                                <th class="p-3">Bilik Khas</th>
+                                <th class="p-3">Nama Pemohon</th>
+                                <th class="p-3">Tujuan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="viewOnlyTableBody">
+                            <tr><td colspan="5" class="p-4 text-center text-slate-500">Memuatkan jadual...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzN8Ymo9OwLlbFQ1myM0eSYwrYsBBBMF_Q8DgpNm6b4XEYluJ0gNB7iaDOboJi_ZUp9/exec";
+
+        let currentDate = new Date();
+        let selectedDateStr = "";
+        let allBookingsData = []; 
+
+        const timeSlotsList = [
+            "07:30 AM - 08:00 AM", "08:00 AM - 08:30 AM", "08:30 AM - 09:00 AM",
+            "09:00 AM - 09:30 AM", "09:30 AM - 10:00 AM", "10:00 AM - 10:30 AM",
+            "10:30 AM - 11:00 AM", "11:00 AM - 11:30 AM", "11:30 AM - 12:00 PM",
+            "12:00 PM - 12:30 PM", "12:30 PM - 01:00 PM", "01:00 PM - 01:30 PM",
+            "01:30 PM - 02:00 PM", "02:00 PM - 02:30 PM", "02:30 PM - 03:00 PM",
+            "03:00 PM - 03:30 PM", "03:30 PM - 04:00 PM", "04:00 PM - 04:30 PM",
+            "08:00 PM - 08:30 PM", "08:30 PM - 09:00 PM", "09:00 PM - 09:30 PM",
+            "09:30 PM - 10:00 PM", "10:00 PM - 10:30 PM"
+        ];
+
+        function switchTab(tab) {
+            document.getElementById('clientSection').classList.add('hidden');
+            document.getElementById('viewOnlySection').classList.add('hidden');
+
+            document.getElementById('btnClient').className = "bg-blue-800 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition";
+            document.getElementById('btnViewOnly').className = "bg-blue-800 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition";
+
+            if (tab === 'client') {
+                document.getElementById('clientSection').classList.remove('hidden');
+                document.getElementById('btnClient').className = "bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition";
+            } else if (tab === 'viewOnly') {
+                document.getElementById('viewOnlySection').classList.remove('hidden');
+                document.getElementById('btnViewOnly').className = "bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition";
+                loadViewOnlyData();
+            }
+        }
+
+        async function loadBookings() {
+            const room = document.getElementById('roomSelect').value;
+            allBookingsData = [];
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+                allBookingsData = data;
+            } catch (err) {
+                console.log("Gagal memuatkan data.");
+            }
+            renderCalendar();
+            document.getElementById('bookingFormContainer').classList.add('hidden');
+        }
+
+        function isDateFullyBooked(dateStr, room) {
+            let bookedSlotsForDate = [];
+            allBookingsData.forEach(item => {
+                if (item['Bilik Khas'] === room && item['Tarikh'] && item['Tarikh'].toString().startsWith(dateStr)) {
+                    let slots = item['Masa'].split(',').map(s => s.trim());
+                    bookedSlotsForDate.push(...slots);
+                }
+            });
+            return timeSlotsList.every(slot => bookedSlotsForDate.includes(slot));
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = "";
+            
+            const room = document.getElementById('roomSelect').value;
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            const monthsNames = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+            document.getElementById('calendarMonthYear').innerText = `${monthsNames[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const formattedMonth = String(month + 1).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const dateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+                const isFull = isDateFullyBooked(dateStr, room);
+                let btnClass = "p-3 rounded-xl text-sm font-semibold transition border ";
+                let disabledAttr = "";
+
+                if (isFull) {
+                    btnClass += "bg-red-500 text-white border-red-500 cursor-not-allowed opacity-90";
+                    disabledAttr = "disabled";
+                } else {
+                    btnClass += "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-600 hover:text-white";
+                }
+
+                grid.innerHTML += `
+                    <button ${disabledAttr} onclick="selectDate('${dateStr}')" class="${btnClass}">
+                        ${day}
+                        ${isFull ? '<span class="block text-[10px] font-normal">Penuh</span>' : '<span class="block text-[10px] font-normal text-emerald-600 hover:text-white">Kosong</span>'}
+                    </button>
+                `;
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function selectDate(dateStr) {
+            selectedDateStr = dateStr;
+            document.getElementById('selectedDateDisplay').innerText = dateStr;
+            renderTimeSlots(dateStr);
+            document.getElementById('bookingFormContainer').classList.remove('hidden');
+            document.getElementById('bookingFormContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderTimeSlots(dateStr) {
+            const room = document.getElementById('roomSelect').value;
+            const container = document.getElementById('timeSlotsContainer');
+            container.innerHTML = "";
+
+            let alreadyBookedSlots = [];
+            allBookingsData.forEach(item => {
+                if (item['Bilik Khas'] === room && item['Tarikh'] && item['Tarikh'].toString().startsWith(dateStr)) {
+                    let slots = item['Masa'].split(',').map(s => s.trim());
+                    alreadyBookedSlots.push(...slots);
+                }
+            });
+
+            timeSlotsList.forEach(slot => {
+                const isTaken = alreadyBookedSlots.includes(slot);
+                const isNight = slot.includes("PM") && (slot.startsWith("08") || slot.startsWith("09") || slot.startsWith("10"));
+                
+                let labelClass = "flex items-center space-x-2 border p-2 rounded-lg ";
+                let inputAttr = "";
+                let badgeText = "";
+
+                if (isTaken) {
+                    labelClass += "bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-75";
+                    inputAttr = "disabled";
+                    badgeText = " <span class='text-[10px] text-red-600 font-bold'>(Ditempah)</span>";
+                } else {
+                    labelClass += isNight ? "bg-blue-50 hover:bg-blue-100 cursor-pointer" : "bg-white hover:bg-slate-100 cursor-pointer";
+                }
+
+                container.innerHTML += `
+                    <label class="${labelClass}">
+                        <input type="checkbox" name="masa" value="${slot}" ${inputAttr} class="rounded text-blue-600">
+                        <span class="text-xs ${isTaken ? 'line-through' : ''}">${slot}${badgeText}</span>
+                    </label>
+                `;
+            });
+        }
+
+        async function loadViewOnlyData() {
+            const tbody = document.getElementById('viewOnlyTableBody');
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Memuatkan jadual terkini...</td></tr>`;
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Tiada rekod tempahan dijumpai.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = "";
+                data.forEach(row => {
+                    let cleanDate = row['Tarikh'] ? row['Tarikh'].toString().split('T')[0] : '';
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-slate-50">
+                            <td class="p-3">${cleanDate}</td>
+                            <td class="p-3">${row['Masa'] || ''}</td>
+                            <td class="p-3 font-semibold text-blue-900">${row['Bilik Khas'] || ''}</td>
+                            <td class="p-3 font-medium text-slate-800">${row['Nama'] || ''}</td>
+                            <td class="p-3">${row['Tujuan / Catatan'] || row['Tujuan'] || '-'}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Ralat menyambung ke pangkalan data.</td></tr>`;
+            }
+        }
+
+        async function submitBooking(e) {
+            e.preventDefault();
+            const checkboxes = document.querySelectorAll('input[name="masa"]:checked');
+            if (checkboxes.length === 0) {
+                alert('Sila pilih sekurang-kurangnya satu slot masa!');
+                return;
+            }
+            let selectedTimes = Array.from(checkboxes).map(cb => cb.value).join(', ');
+
+            const room = document.getElementById('roomSelect').value;
+            const nama = document.getElementById('nama').value;
+            const telefon = document.getElementById('telefon').value;
+            const tujuan = document.getElementById('tujuan').value;
+
+            const payload = {
+                tarikh: selectedDateStr,
+                masa: selectedTimes,
+                pakej: room,
+                nama: nama,
+                telefon: telefon,
+                tujuan: tujuan
+            };
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerText = "Sedang Menghantar...";
+            submitBtn.disabled = true;
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                document.getElementById('bookingFormContainer').classList.add('hidden');
+                document.getElementById('successCard').classList.remove('hidden');
+                document.getElementById('successDetails').innerHTML = `
+                    <p><strong>Bilik:</strong> ${room}</p>
+                    <p><strong>Tarikh:</strong> ${selectedDateStr}</p>
+                    <p><strong>Masa:</strong> ${selectedTimes}</p>
+                    <p><strong>Nama:</strong> ${nama}</p>
+                    <p><strong>Telefon:</strong> ${telefon}</p>
+                    <p><strong>Tujuan:</strong> ${tujuan || '-'}</p>
+                `;
+                document.getElementById('bookingForm').reset();
+                loadBookings();
+            } catch (error) {
+                alert('Berlaku ralat semasa menghantar tempahan.');
+            } finally {
+                submitBtn.innerText = "Hantar Tempahan Sekarang";
+                submitBtn.disabled = false;
+            }
+        }
+
+        function resetSystem() {
+            document.getElementById('successCard').classList.add('hidden');
+            loadBookings();
+        }
+
+        window.onload = function() {
+            loadBookings();
+        };
+    </script>
+</body>
+</html>
